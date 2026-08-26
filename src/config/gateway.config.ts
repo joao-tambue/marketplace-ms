@@ -1,4 +1,4 @@
-export const serverConfig = {
+export const serviceConfig = {
   users: {
     url: process.env.USERS_SERVICE_URL || 'http://localhost:3001',
     timeout: 1000,
