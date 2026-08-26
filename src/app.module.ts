@@ -16,9 +16,20 @@ import { LoggingMiddleware } from './middleware/logging/logging.middleware';
     ThrottlerModule.forRoot({
       throttlers: [
         {
-          ttl: 60000, // 1 minute
-          limit: 100, // 100 requests per minute
+          name: 'short',
+          ttl: 1000,
+          limit: 10,
         },
+        {
+          name: 'medium',
+          ttl: 60000,
+          limit: 100,
+        },
+        {
+          name: 'long',
+          ttl: 900000,
+          limit: 1000,
+        }
       ],
     }),
     ProxyModule,
