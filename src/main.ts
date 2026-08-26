@@ -1,58 +1,52 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common/pipes/validation.pipe';
-import helmet, { contentSecurityPolicy } from 'helmet';
+import helmet from 'helmet';
+import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.use(helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", 'data:', 'https:'],
-        connectSrc: ["'self'", 'https:'],
-        fontSrc: ["'self'", 'https:', 'data:'],
-        objectSrc: ["'none'"],
-        mediaSrc: ["'self'", 'https:'],
-        frameSrc: ["'self'", 'https:'],
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", "'data:'", "'https:'"],
+        },
       },
-    },
-    crossOriginEmbedderPolicy: false,
-    hsts: {
-      maxAge: 31536000, // 1 year in seconds
-      includeSubDomains: true,
-      preload: true,
-    },
-  }));
+      crossOriginEmbedderPolicy: false,
+      hsts: {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true,
+      },
+    }),
+  );
 
   app.enableCors({
     origin: (origin, callback) => {
-      if (!origin || origin === 'http://localhost:3000') {
+      if (!origin) return callback(null, true);
+
+      const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || ['*'];
+
+      if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
         callback(null, true);
-
-        const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || ['*'];
-
-        if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
-          callback(null, true);
-        }
       } else {
         callback(new Error('Not allowed by CORS'));
       }
     },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     allowedHeaders: [
-      'Content-Type', 
+      'Content-Type',
       'Authorization',
       'X-Requested-With',
       'Accept',
       'Origin',
-      'Access-Control-Allow-Origin',
-      'Access-Control-Allow-Headers',
-      'Access-Control-Allow-Methods',
+      'Access-Control-Request-Method',
+      'Access-Control-Request-Headers',
     ],
     credentials: true,
     maxAge: 86400, // 24 hours
@@ -60,9 +54,9 @@ async function bootstrap() {
 
   app.useGlobalPipes(
     new ValidationPipe({
+      transform: true,
       whitelist: true,
       forbidNonWhitelisted: true,
-      transform: true,
     }),
   );
 
@@ -73,14 +67,14 @@ async function bootstrap() {
     .addBearerAuth()
     .build();
 
-    
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
 
-  console.log(`API Gateway is running on http://localhost:${port}`);
-  console.log(`Swagger documentation is available at http://localhost:${port}/api`);
+  console.log(`API Gateway running on port ${port}`);
+  console.log(`Swagger documentation: http://localhost:${port}/api`);
 }
+
 bootstrap();
