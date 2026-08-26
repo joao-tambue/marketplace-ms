@@ -2,7 +2,7 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { firstValueFrom } from 'rxjs';
-import { serviceConfig } from '../../config/gateway.config';
+import { serviceConfig } from 'src/config/gateway.config';
 
 export interface UserSession {
   valid: boolean;
